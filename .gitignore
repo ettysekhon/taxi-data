@@ -1,0 +1,15 @@
+# Env
+.env
+
+# Editor
+.vscode/
+
+.DS_Store
+
+*.csv
+*.zip
+
+# Kestra storage
+workflow-orchestration/kestra-storage/
+
+.venv/
