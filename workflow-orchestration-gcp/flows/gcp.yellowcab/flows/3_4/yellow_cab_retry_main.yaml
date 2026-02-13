@@ -1,0 +1,147 @@
+id: yellow_cab_retry_main
+namespace: gcp.yellowcab
+
+variables:
+  bucket: "lde-my-kestra-workspace"
+  dataset: "yc_retry"
+  project: "kestra-workspace-ak-lde-2025"
+  location: "EU"
+
+tasks:
+  - id: list_files
+    type: io.kestra.plugin.gcp.gcs.List
+    from: "gs://{{ vars.bucket }}/yc-retry/data/"
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+
+  - id: ensure_result_table_exists
+    type: io.kestra.plugin.gcp.bigquery.Query
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+    projectId: "{{ vars.project }}"
+    location: "{{ vars.location }}"
+    sql: |
+      CREATE TABLE IF NOT EXISTS `{{ vars.project }}.{{ vars.dataset }}.yellowcab_result` (
+        VendorID INT64,
+        tpep_pickup_datetime TIMESTAMP,
+        tpep_dropoff_datetime TIMESTAMP,
+        passenger_count INT64,
+        trip_distance FLOAT64,
+        total_amount FLOAT64,
+        source_file STRING,
+        execution_run_id STRING,
+        ingestion_run_id STRING,
+        ingested_at TIMESTAMP
+      );
+
+  - id: foreach_file
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.list_files.blobs }}"
+    tasks:
+      - id: process_one_file
+        type: io.kestra.plugin.core.flow.Sequential
+        allowFailure: true
+        runIf: "{{ taskrun.value | jq('.size') | first > 0 }}"
+        tasks:
+
+          # ------------------------------------------------------------
+          # 1) Load each file into its own raw staging table (no collisions)
+          # ------------------------------------------------------------
+          - id: raw_load
+            type: io.kestra.plugin.gcp.bigquery.LoadFromGcs
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            from:
+              - "{{ parent.taskrun.value | jq('.uri') | first }}"
+            destinationTable: "{{ vars.project }}.{{ vars.dataset }}.raw_stage_{{ taskrun.parentId }}"
+            format: CSV
+            autodetect: true
+            csvOptions:
+              skipLeadingRows: 1
+            writeDisposition: WRITE_TRUNCATE
+            location: "{{ vars.location }}"
+            retry:
+              type: exponential
+              interval: PT5S
+              maxAttempt: 6
+              maxInterval: PT1M
+
+          # ------------------------------------------------------------
+          # 2) Subflow appends cleaned rows into final table
+          # ------------------------------------------------------------
+          - id: cleaning_subflow
+            type: io.kestra.plugin.core.flow.Subflow
+            namespace: gcp.yellowcab
+            flowId: yellow_cab_retry_subflow
+            wait: true
+            inputs:
+              file_name: "{{ parent.taskrun.value | jq('.name') | first | split('/') | last }}"
+              execution_run_id: "{{ execution.id }}"
+              raw_table: "{{ vars.project }}.{{ vars.dataset }}.raw_stage_{{ taskrun.parentId }}"
+              ingestion_run_id: "{{ taskrun.parentId }}"
+
+          # ------------------------------------------------------------
+          # 3) Drop per-file raw staging table after success
+          # ------------------------------------------------------------
+          - id: drop_raw_stage_success
+            type: io.kestra.plugin.gcp.bigquery.Query
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            projectId: "{{ vars.project }}"
+            location: "{{ vars.location }}"
+            sql: |
+              DROP TABLE IF EXISTS `{{ vars.project }}.{{ vars.dataset }}.raw_stage_{{ taskrun.parentId }}`;
+                            
+          # ------------------------------------------------------------
+          # 4) Archive + delete original after success
+          # ------------------------------------------------------------
+          - id: copy_to_archive
+            type: io.kestra.plugin.gcp.gcs.Copy
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            from: "{{ parent.taskrun.value | jq('.uri') | first }}"
+            to: "gs://{{ vars.bucket }}/yc-retry/archive/{{ parent.taskrun.value | jq('.name') | first | split('/') | last }}"
+
+          - id: delete_original_success
+            type: io.kestra.plugin.gcp.gcs.Delete
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            uri: "{{ parent.taskrun.value | jq('.uri') | first }}"
+
+        errors:
+          # ------------------------------------------------------------
+          # A) Roll back rows written for this file + run (realistic failure handling)
+          # ------------------------------------------------------------
+          - id: rollback_final_rows_for_file
+            type: io.kestra.plugin.gcp.bigquery.Query
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            projectId: "{{ vars.project }}"
+            location: "{{ vars.location }}"
+            sql: |
+              DELETE FROM `{{ vars.project }}.{{ vars.dataset }}.yellowcab_result`
+              WHERE ingestion_run_id = '{{ taskrun.parentId }}'
+                AND source_file = '{{ parent.taskrun.value | jq('.name') | first | split('/') | last }}';
+
+          # ------------------------------------------------------------
+          # B) Drop per-file raw staging table even on error (100%)
+          # ------------------------------------------------------------
+          - id: drop_raw_stage_error
+            type: io.kestra.plugin.gcp.bigquery.Query
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            projectId: "{{ vars.project }}"
+            location: "{{ vars.location }}"
+            sql: |
+              DROP TABLE IF EXISTS `{{ vars.project }}.{{ vars.dataset }}.raw_stage_{{ taskrun.parentId }}`;
+
+          # Optional debug
+          - id: debug_error_ctx
+            type: io.kestra.plugin.core.debug.Return
+            format: |
+              ==== DEBUG ERROR CONTEXT ====
+              taskrun: {{ taskrun | json }}
+              parent.taskrun: {{ parent.taskrun | json }}
+
+          - id: copy_to_error
+            type: io.kestra.plugin.gcp.gcs.Copy
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            from: "{{ parent.taskrun.value | jq('.uri') | first }}"
+            to: "gs://{{ vars.bucket }}/yc-retry/errors/{{ parent.taskrun.value | jq('.name') | first | split('/') | last }}"
+
+          - id: delete_original_failed
+            type: io.kestra.plugin.gcp.gcs.Delete
+            serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+            uri: "{{ parent.taskrun.value | jq('.uri') | first }}"

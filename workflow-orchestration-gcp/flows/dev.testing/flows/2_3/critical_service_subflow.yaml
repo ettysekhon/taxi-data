@@ -1,0 +1,22 @@
+id: critical_service
+namespace: dev.testing
+
+tasks:
+  - id: download_orders
+    type: io.kestra.plugin.core.http.Download
+    uri: "https://huggingface.co/datasets/kestra/datasets/raw/main/csv/orders.csv"
+
+  - id: return_data
+    type: io.kestra.plugin.jdbc.duckdb.Query
+    url: "jdbc:duckdb:"
+    sql: |
+      SELECT sum(total) as total, avg(quantity) as avg_quantity
+      FROM read_csv_auto('orders.csv', header=True);
+    inputFiles:
+      orders.csv: "{{ outputs.download_orders.uri }}"
+    fetchType: STORE
+
+outputs:
+  - id: some_output
+    type: STRING
+    value: "{{ outputs.return_data.uri }}"

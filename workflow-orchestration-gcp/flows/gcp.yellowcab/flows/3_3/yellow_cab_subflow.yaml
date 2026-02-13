@@ -1,0 +1,166 @@
+id: yellow_cab_subflow
+namespace: gcp.yellowcab
+
+variables:
+  bucket: "lde-my-kestra-workspace"
+
+tasks:
+
+  # ---------------------------------------------------------
+  # 0) LOAD TAXI ZONE LOOKUP FROM GCS INTO BIGQUERY
+  # ---------------------------------------------------------
+  - id: load_taxi_zones
+    type: io.kestra.plugin.gcp.bigquery.LoadFromGcs
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+    from:
+      - "gs://{{ vars.bucket }}/taxi_zone_lookup.csv"
+    destinationTable: "kestra-workspace-ak-lde-2025.YellowCab.taxi_zones"
+    format: CSV
+    csvOptions:
+      skipLeadingRows: 1
+    autodetect: true
+    writeDisposition: WRITE_TRUNCATE
+    location: "EU"
+
+
+  # ---------------------------------------------------------
+  # 1) ENRICH RAW TRIPS WITH ZONE LOOKUP (JOIN ON PULocationID)
+  # ---------------------------------------------------------
+  - id: zone_classification
+    type: io.kestra.plugin.gcp.bigquery.Query
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+    location: "EU"
+    sql: |
+      CREATE OR REPLACE TABLE
+        `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone` AS
+      SELECT
+        t.*,
+        z.Borough        AS pu_borough,
+        z.Zone           AS pu_zone,
+        z.service_zone   AS pu_service_zone
+      FROM
+        `kestra-workspace-ak-lde-2025.YellowCab.raw_trips` t
+      LEFT JOIN
+        `kestra-workspace-ak-lde-2025.YellowCab.taxi_zones` z
+      ON
+        t.PULocationID = z.LocationID;
+
+
+  # ---------------------------------------------------------
+  # 2) SPECIAL TRIP DETECTION (PARALLEL)
+  # ---------------------------------------------------------
+  - id: special_trips
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks:
+
+      # Suspiciously low fares
+      - id: suspicious_trips
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.suspicious_trips` AS
+          SELECT *
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          WHERE fare_amount < 3;
+
+      # Very short trips
+      - id: short_trips
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.short_trips` AS
+          SELECT *
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          WHERE trip_distance < 0.5;
+
+      # Ultra long trips
+      - id: long_trips
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.long_trips` AS
+          SELECT *
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          WHERE trip_distance > 40;
+
+      # Invalid GPS / bad location
+      - id: invalid_gps
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.invalid_gps` AS
+          SELECT *
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          WHERE PULocationID IS NULL
+             OR PULocationID = 0;
+
+
+  # ---------------------------------------------------------
+  # 3) AGGREGATIONS (PARALLEL)
+  # ---------------------------------------------------------
+  - id: aggregations
+    type: io.kestra.plugin.core.flow.Parallel
+    tasks:
+
+      # Trips grouped by borough
+      - id: trips_per_borough
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.trips_per_borough` AS
+          SELECT pu_borough, COUNT(*) AS trips
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          GROUP BY pu_borough;
+
+      # Average fare per borough
+      - id: avg_fare_per_borough
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.avg_fare_per_borough` AS
+          SELECT pu_borough, AVG(fare_amount) AS avg_fare
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          GROUP BY pu_borough;
+
+      # Trips by hour of day
+      - id: trips_by_hour
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        location: "EU"
+        sql: |
+          CREATE OR REPLACE TABLE
+            `kestra-workspace-ak-lde-2025.YellowCab.trips_by_hour` AS
+          SELECT
+            EXTRACT(HOUR FROM tpep_pickup_datetime) AS hour,
+            COUNT(*) AS trips
+          FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+          GROUP BY hour;
+
+
+  # ---------------------------------------------------------
+  # 4) FINAL CURATED TABLE
+  # ---------------------------------------------------------
+  - id: curated_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+    location: "EU"
+    sql: |
+      CREATE OR REPLACE TABLE
+        `kestra-workspace-ak-lde-2025.YellowCab.trips_cleaned` AS
+      SELECT *
+      FROM `kestra-workspace-ak-lde-2025.YellowCab.trips_with_zone`
+      WHERE trip_distance > 0
+        AND fare_amount > 3
+        AND pu_borough IS NOT NULL;

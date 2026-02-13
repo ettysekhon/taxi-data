@@ -1,0 +1,14 @@
+id: python-with-namespace-files
+namespace: dev.testing
+
+tasks:
+  - id: run_script
+    type: io.kestra.plugin.scripts.python.Commands
+    namespaceFiles:
+      enabled: true
+    beforeCommands:
+      - pip install pandas
+    outputFiles:
+      - "sales_report.csv"
+    commands:
+      - python process_sales_data.py

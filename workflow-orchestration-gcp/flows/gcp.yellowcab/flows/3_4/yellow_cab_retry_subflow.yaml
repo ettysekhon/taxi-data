@@ -1,0 +1,123 @@
+id: yellow_cab_retry_subflow
+namespace: gcp.yellowcab
+
+variables:
+  project: "kestra-workspace-ak-lde-2025"
+  dataset: "yc_retry"
+  location: "EU"
+
+inputs:
+  - id: file_name
+    type: STRING
+  - id: raw_table
+    type: STRING
+  - id: execution_run_id
+    type: STRING
+  - id: ingestion_run_id
+    type: STRING
+
+tasks:
+  # ---------------------------
+  # TRY STRICT
+  # ---------------------------
+  - id: try_strict
+    type: io.kestra.plugin.core.flow.Sequential
+    allowFailure: true
+    tasks:
+      - id: insert_strict
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        projectId: "{{ vars.project }}"
+        location: "{{ vars.location }}"
+        sql: |
+          INSERT INTO `{{ vars.project }}.{{ vars.dataset }}.yellowcab_result` (
+            VendorID,
+            tpep_pickup_datetime,
+            tpep_dropoff_datetime,
+            passenger_count,
+            trip_distance,
+            total_amount,
+            source_file,
+            execution_run_id,
+            ingestion_run_id,
+            ingested_at
+          )
+          SELECT
+            CAST(VendorID AS INT64),
+            TIMESTAMP(tpep_pickup_datetime),
+            TIMESTAMP(tpep_dropoff_datetime),
+            CAST(passenger_count AS INT64),
+            SAFE_CAST(trip_distance AS FLOAT64),
+            SAFE_CAST(total_amount AS FLOAT64),
+            '{{ inputs.file_name }}',
+            '{{ inputs.execution_run_id }}',
+            '{{ inputs.ingestion_run_id }}',
+            CURRENT_TIMESTAMP()
+          FROM `{{ inputs.raw_table }}`;
+
+    errors:
+      - id: strict_failed_flag
+        type: io.kestra.plugin.core.debug.Return
+        format: "strict_failed"
+
+  # ---------------------------
+  # TRY SOFT (when strict failed)
+  # ---------------------------
+  - id: try_soft
+    type: io.kestra.plugin.core.flow.Sequential
+    allowFailure: true
+    runIf: "{{ outputs.strict_failed_flag is defined }}"
+    tasks:
+      - id: insert_soft
+        type: io.kestra.plugin.gcp.bigquery.Query
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        projectId: "{{ vars.project }}"
+        location: "{{ vars.location }}"
+        sql: |
+          INSERT INTO `{{ vars.project }}.{{ vars.dataset }}.yellowcab_result` (
+            VendorID,
+            tpep_pickup_datetime,
+            tpep_dropoff_datetime,
+            passenger_count,
+            trip_distance,
+            total_amount,
+            source_file,
+            execution_run_id,
+            ingestion_run_id,
+            ingested_at
+          )
+          WITH cleaned AS (
+            SELECT
+              SAFE_CAST(VendorID AS INT64) AS VendorID,
+              TIMESTAMP(tpep_pickup_datetime) AS tpep_pickup_datetime,
+              TIMESTAMP(tpep_dropoff_datetime) AS tpep_dropoff_datetime,
+              COALESCE(SAFE_CAST(passenger_count AS INT64), 1) AS passenger_count,
+              SAFE_CAST(trip_distance AS FLOAT64) AS trip_distance,
+              SAFE_CAST(total_amount AS FLOAT64) AS total_amount
+            FROM `{{ inputs.raw_table }}`
+          )
+          SELECT
+            VendorID,
+            tpep_pickup_datetime,
+            tpep_dropoff_datetime,
+            passenger_count,
+            trip_distance,
+            total_amount,
+            '{{ inputs.file_name }}',
+            '{{ inputs.execution_run_id }}',
+            '{{ inputs.ingestion_run_id }}',
+            CURRENT_TIMESTAMP()
+          FROM cleaned;
+
+    errors:
+      - id: soft_failed_flag
+        type: io.kestra.plugin.core.debug.Return
+        format: "soft_failed"
+
+  # ---------------------------
+  # FAIL only when soft failed too
+  # ---------------------------
+  - id: fail_if_soft_also_failed
+    type: io.kestra.plugin.core.execution.Fail
+    runIf: "{{ outputs.strict_failed_flag is defined and outputs.soft_failed_flag is defined }}"
+    errorMessage: "Strict cleaning failed and soft cleaning also failed for {{ inputs.file_name }}."

@@ -1,0 +1,15 @@
+id: java-with-namespace-files
+namespace: dev.testing
+
+tasks:
+  - id: compile_and_run
+    type: io.kestra.plugin.scripts.shell.Commands
+    containerImage: eclipse-temurin:17-jdk
+    namespaceFiles:
+      enabled: true
+    outputFiles:
+      - "output.txt"
+    commands:
+      - javac DataProcessor.java
+      - java DataProcessor
+      - cat output.txt

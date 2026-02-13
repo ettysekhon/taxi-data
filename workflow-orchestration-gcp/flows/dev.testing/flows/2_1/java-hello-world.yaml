@@ -1,0 +1,19 @@
+id: java-hello-world
+namespace: dev.testing
+
+tasks:
+  - id: run_java
+    type: io.kestra.plugin.scripts.shell.Commands
+    containerImage: eclipse-temurin:17-jdk
+    commands:
+      - |
+        cat > HelloKestra.java << 'EOF'
+        public class HelloKestra {
+            public static void main(String[] args) {
+                System.out.println("Hello from Java in Kestra!");
+                System.out.println("Current time: " + java.time.LocalDateTime.now());
+            }
+        }
+        EOF
+      - javac HelloKestra.java
+      - java HelloKestra

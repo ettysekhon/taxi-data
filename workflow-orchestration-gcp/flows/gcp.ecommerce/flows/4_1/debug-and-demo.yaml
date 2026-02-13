@@ -1,0 +1,80 @@
+id: debug-and-schedule-demo
+namespace: gcp.ecommerce
+description: >
+  Demo flow to show log levels + scheduled executions (every 10 minutes). Includes an optional fail path to demonstrate UI Replay after a small fix.
+
+triggers:
+  - id: every-10-min
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/10 * * * *"
+
+inputs:
+  - id: make_it_fail
+    type: BOOL
+    required: true
+    defaults: true
+    description: "Set true to intentionally fail (Replay demo)."
+
+  - id: replay_note
+    type: STRING
+    required: true
+    defaults: "First run"
+    description: "Visible in logs to show Replay uses old inputs."
+
+tasks:
+  - id: start_info
+    type: io.kestra.plugin.core.log.Log
+    level: INFO
+    message: |
+      Starting demo flow
+      execution_id={{ execution.id }}
+      make_it_fail={{ inputs.make_it_fail }}
+      replay_note={{ inputs.replay_note }}
+
+  - id: debug_details
+    type: io.kestra.plugin.core.log.Log
+    level: DEBUG
+    message: |
+      DEBUG example:
+      namespace={{ flow.namespace }}
+      flow_id={{ flow.id }}
+      revision={{ flow.revision }}
+      labels={{ labels }}
+
+  - id: warn_example
+    type: io.kestra.plugin.core.log.Log
+    level: WARN
+    message: |
+      WARN example: just demonstrating log levels.
+
+  - id: error_example
+    type: io.kestra.plugin.core.log.Log
+    level: ERROR
+    message: |
+      ERROR example: this is only a log line, not a failure yet.
+
+  # Bonus: gate for a Replay demo
+  - id: fix_me_gate
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ inputs.make_it_fail }}"
+    then:
+      - id: about_to_fail
+        type: io.kestra.plugin.core.log.Log
+        level: ERROR
+        message: |
+          Intentional failure triggered (make_it_fail=true).
+          Now change the workflow (the "fix") and Replay this execution in the UI.
+      - id: failing_step
+        type: io.kestra.plugin.core.execution.Fail
+    else:
+      - id: success_step
+        type: io.kestra.plugin.core.log.Log
+        level: INFO
+        message: |
+          All good. This run succeeded (make_it_fail=false).
+
+  - id: end_info
+    type: io.kestra.plugin.core.log.Log
+    level: INFO
+    message: |
+      Done. This flow is scheduled every 10 minutes and should appear in Future Executions.

@@ -1,0 +1,87 @@
+id: yellow_cab_main
+namespace: gcp.yellowcab
+
+variables:
+  bucket: "lde-my-kestra-workspace"
+
+tasks:
+
+  # ---------------------------------------------------------
+  # 1. LIST INPUT FILES
+  # ---------------------------------------------------------
+  - id: list_files
+    type: io.kestra.plugin.gcp.gcs.List
+    from: "gs://{{ vars.bucket }}/yellow-cab/"
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+
+
+  # ---------------------------------------------------------
+  # 2. PARALLEL GCS -> BIGQUERY RAW INGESTION
+  # ---------------------------------------------------------
+  - id: foreach_file
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.list_files.blobs }}"
+    concurrencyLimit: 5
+    tasks:
+      - id: load_raw
+        type: io.kestra.plugin.gcp.bigquery.LoadFromGcs
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        from:
+          - "{{ taskrun.value | jq('.uri') | first }}"
+        destinationTable: "kestra-workspace-ak-lde-2025.YellowCab.raw_trips"
+        format: PARQUET
+        location: "EU"
+        writeDisposition: WRITE_APPEND
+        runIf: "{{ taskrun.value | jq('.size') | first > 0 }}"
+
+
+  # ---------------------------------------------------------
+  # 3. TRIGGER SUBFLOW (BigQuery transformations)
+  # ---------------------------------------------------------
+  - id: process_raw_data
+    type: io.kestra.plugin.core.flow.Subflow
+    namespace: gcp.yellowcab
+    flowId: yellow_cab_subflow
+    wait: true
+
+
+  # ---------------------------------------------------------
+  # 4a. COPY EACH FILE TO ARCHIVE (PER-FILE) 
+  # ---------------------------------------------------------
+  - id: foreach_copy
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.list_files.blobs }}"
+    concurrencyLimit: 10
+    tasks:
+      - id: debug_blobs
+        type: io.kestra.plugin.core.debug.Return
+        format: |
+          URI: {{ taskrun.value | jq('.uri') | first }}
+          NAME: {{ taskrun.value | jq('.name') | first }}
+          SIZE: {{ taskrun.value | jq('.size') | first }}
+            
+      - id: copy_to_archive
+        type: io.kestra.plugin.gcp.gcs.Copy
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        from: "{{ taskrun.value | jq('.uri') | first }}"
+        to: "gs://{{ vars.bucket }}/yellow-cab-archive/{{ taskrun.value | jq('.name') | first | split(\"/\") | last }}"
+        runIf: "{{ taskrun.value | jq('.size') | first > 0 }}"
+
+  # 🔥 BARRIER — IMPORTANT!?
+  - id: wait_for_copy
+    type: io.kestra.plugin.core.debug.Return
+    format: "Copy completed"
+
+# ---------------------------------------------------------
+  # 4b. DELETE EACH FILE (PER-FILE)
+  # ---------------------------------------------------------
+  - id: foreach_delete
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.list_files.blobs }}"
+    concurrencyLimit: 10
+    tasks:
+      - id: delete_file
+        type: io.kestra.plugin.gcp.gcs.Delete
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        uri: "{{ taskrun.value | jq('.uri') | first }}"
+        runIf: "{{ taskrun.value | jq('.size') | first > 0 }}"

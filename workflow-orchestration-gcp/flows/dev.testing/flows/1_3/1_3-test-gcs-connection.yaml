@@ -1,0 +1,17 @@
+id: test-gcs-connection
+namespace: dev.testing
+
+tasks:
+  - id: create_and_upload
+    type: io.kestra.plugin.scripts.python.Script
+    outputFiles:
+      - "hello.txt"
+    script: |
+      with open('hello.txt', 'w') as f:
+          f.write('Hello from Kestra! GCP connection works! 🎉')
+  
+  - id: upload_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+    from: "{{ outputs.create_and_upload.outputFiles['hello.txt'] }}"
+    to: "gs://com-mycompany-kestra-demo/test/hello.txt"

@@ -1,0 +1,145 @@
+id: gcp-ecommerce-dashboard
+title: GCP Ecommerce Dashboard
+description: Simple metrics for namespace gcp.ecommerce
+
+timeWindow:
+  default: P7D
+  max: P30D
+
+charts:
+  # 1) Executions over the last week (TimeSeries) - default-dashboard style (tooltip behaves better)
+  - id: executions_last_week
+    type: io.kestra.plugin.core.dashboard.chart.TimeSeries
+    chartOptions:
+      displayName: Executions (last 7 days)
+      description: Count of executions over time, grouped by state
+      legend:
+        enabled: true
+      column: date
+      colorByColumn: state
+      width: 9
+    data:
+      type: io.kestra.plugin.core.dashboard.data.Executions
+      columns:
+        date:
+          field: START_DATE
+          displayName: Date
+        state:
+          field: STATE
+          displayName: State
+        total:
+          displayName: Executions
+          agg: COUNT
+          graphStyle: BARS
+      where:
+        - type: EQUAL_TO
+          field: NAMESPACE
+          value: "gcp.ecommerce"
+
+  # 1b) Total executions by state (Pie / Donut) - appended
+  - id: total_executions_pie
+    type: io.kestra.plugin.core.dashboard.chart.Pie
+    chartOptions:
+      displayName: Total Executions by State
+      graphStyle: DONUT
+      tooltip: ALL
+      width: 3
+    data:
+      type: io.kestra.plugin.core.dashboard.data.Executions
+      columns:
+        id:
+          field: ID
+          displayName: Executions
+          agg: COUNT
+        state:
+          field: STATE
+          displayName: State
+      where:
+        - type: EQUAL_TO
+          field: NAMESPACE
+          value: "gcp.ecommerce"
+
+  # 2) Next execution for the flows in your namespace (Table)
+  - id: next_execution
+    type: io.kestra.plugin.core.dashboard.chart.Table
+    chartOptions:
+      displayName: Next execution per flow
+      description: Next scheduled run based on triggers
+      width: 12
+    data:
+      type: io.kestra.plugin.core.dashboard.data.Triggers
+      columns:
+        flow:
+          field: FLOW_ID
+          displayName: Flow
+        trigger:
+          field: TRIGGER_ID
+          displayName: Trigger
+        next_execution:
+          field: NEXT_EXECUTION_DATE
+          displayName: Next execution
+      where:
+        - type: EQUAL_TO
+          field: NAMESPACE
+          value: "gcp.ecommerce"
+        - type: IS_NOT_NULL
+          field: NEXT_EXECUTION_DATE
+      orderBy:
+        - column: next_execution
+          order: ASC
+
+  # 3) Success rate KPI (KPI)
+  - id: success_rate
+    type: io.kestra.plugin.core.dashboard.chart.KPI
+    chartOptions:
+      displayName: Success rate (last 7 days)
+      numberType: PERCENTAGE
+      width: 3
+    data:
+      type: io.kestra.plugin.core.dashboard.data.ExecutionsKPI
+      columns:
+        field: ID
+        agg: COUNT
+      numerator:
+        - type: IN
+          field: STATE
+          values:
+            - SUCCESS
+      where:
+        - type: EQUAL_TO
+          field: NAMESPACE
+          value: "gcp.ecommerce"
+
+    # 4) Executions per Flow (Bar) - COUNT explicitly over ID (fixes bar + tooltip in 1.1.7)
+  - id: executions_per_flow
+    type: io.kestra.plugin.core.dashboard.chart.Bar
+    chartOptions:
+      displayName: Executions per Flow (Success vs Failed)
+      description: Execution count per flow grouped by state (last 7 days)
+      legend:
+        enabled: true
+      tooltip: ALL
+      column: flow
+      width: 9
+    data:
+      type: io.kestra.plugin.core.dashboard.data.Executions
+      columns:
+        flow:
+          field: FLOW_ID
+          displayName: Flow
+        state:
+          field: STATE
+          displayName: State
+        total:
+          field: ID
+          displayName: Executions
+          agg: COUNT
+      where:
+        - type: EQUAL_TO
+          field: NAMESPACE
+          value: "gcp.ecommerce"
+        - type: IN
+          field: STATE
+          values:
+            - SUCCESS
+            - FAILED

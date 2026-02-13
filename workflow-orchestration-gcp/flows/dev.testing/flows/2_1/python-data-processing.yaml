@@ -1,0 +1,27 @@
+id: python-data-processing
+namespace: dev.testing
+
+tasks:
+  - id: process_data
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands:
+      - pip install pandas
+    outputFiles:
+      - "output.csv"
+    script: |
+      import pandas as pd
+      
+      # Create sample data
+      data = {
+          'name': ['Alice', 'Bob', 'Charlie'],
+          'age': [25, 30, 35],
+          'salary': [50000, 60000, 70000]
+      }
+      df = pd.DataFrame(data)
+      
+      # Transform: Calculate salary after 10% raise
+      df['new_salary'] = df['salary'] * 1.1
+      
+      # Save output
+      df.to_csv('output.csv', index=False)
+      print(f"Processed {len(df)} records")

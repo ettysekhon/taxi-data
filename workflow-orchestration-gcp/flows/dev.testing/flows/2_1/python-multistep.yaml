@@ -1,0 +1,51 @@
+id: python-multi-step
+namespace: dev.testing
+
+tasks:
+  - id: generate_data
+    type: io.kestra.plugin.scripts.python.Script
+    outputFiles:
+      - "data.csv"
+    script: |
+      import csv
+      
+      # Generate data
+      data = [
+          ['name', 'score'],
+          ['Alice', '85'],
+          ['Bob', '92'],
+          ['Charlie', '78']
+      ]
+      
+      with open('data.csv', 'w', newline='') as f:
+          writer = csv.writer(f)
+          writer.writerows(data)
+      
+      print("Data generated successfully")
+  
+  - id: analyze_data
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands:
+      - pip install pandas
+    inputFiles:
+      data.csv: "{{ outputs.generate_data.outputFiles['data.csv'] }}"
+    outputFiles:
+      - "summary.txt"
+    script: |
+      import pandas as pd
+      
+      # Read the data from previous step
+      df = pd.read_csv('data.csv')
+      
+      # Calculate statistics
+      avg_score = df['score'].mean()
+      max_score = df['score'].max()
+      
+      print(f"Average score: {avg_score:.2f}")
+      print(f"Highest score: {max_score}")
+      
+      # Write summary
+      with open('summary.txt', 'w') as f:
+          f.write(f"Class Statistics\n")
+          f.write(f"Average: {avg_score:.2f}\n")
+          f.write(f"Maximum: {max_score}\n")

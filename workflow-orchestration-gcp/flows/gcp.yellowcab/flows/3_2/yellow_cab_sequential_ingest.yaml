@@ -1,0 +1,33 @@
+id: yellow_cab_sequential_ingest
+namespace: gcp.yellowcab
+
+variables:
+  bucket: "lde-my-kestra-workspace"
+
+tasks:
+  - id: list_files
+    type: io.kestra.plugin.gcp.gcs.List
+    from: "gs://{{ vars.bucket }}/yellow-cab/"
+    serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+
+  - id: dump_blobs
+    type: io.kestra.plugin.core.debug.Return
+    format: |
+      OUTPUT BLOBS:
+      {{ outputs.list_files.blobs }}
+
+  - id: foreach_file
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ outputs.list_files.blobs }}"
+
+    tasks:
+      - id: load
+        runIf: "{{ taskrun.value | jq('.size') | first > 0 }}"
+        type: io.kestra.plugin.gcp.bigquery.LoadFromGcs
+        serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
+        from:
+          - "{{ taskrun.value | jq('.uri') | first }}"
+        destinationTable: "kestra-workspace-ak-lde-2025.YellowCab.raw_data"
+        format: PARQUET
+        location: "EU"
+        writeDisposition: WRITE_APPEND

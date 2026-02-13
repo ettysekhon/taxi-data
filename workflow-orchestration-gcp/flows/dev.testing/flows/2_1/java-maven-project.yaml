@@ -1,0 +1,17 @@
+id: java-maven-project
+namespace: dev.testing
+
+tasks:
+  - id: build_and_run
+    type: io.kestra.plugin.scripts.shell.Commands
+    containerImage: maven:3.9-eclipse-temurin-17
+    namespaceFiles:
+      enabled: true
+    outputFiles:
+      - "output.json"
+    commands:
+      - ls -la  # Debug: see what files are available
+      - mvn --version  # Show Maven version
+      - mvn clean compile  # Compile the project
+      - mvn exec:java  # Run the main class
+      - cat output.json  # Show the output

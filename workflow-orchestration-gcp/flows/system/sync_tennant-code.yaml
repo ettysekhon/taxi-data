@@ -1,0 +1,21 @@
+id: sync-tenant-code
+namespace: system
+
+tasks:
+  - id: sync_tenant
+    type: io.kestra.plugin.git.TenantSync
+    sourceOfTruth: GIT
+    whenMissingInSource: KEEP
+    url: https://github.com/YOUR-USERNAME/kestra-git-demo.git
+    branch: main
+    username: YOUR-USERNAME
+    password: "{{ secret('GITHUB_TOKEN') }}"
+    kestraUrl: "http://localhost:8080"
+    auth:
+      username: "{{ secret('KESTRA_USER') }}"
+      password: "{{ secret('KESTRA_PASSWORD') }}"
+    
+triggers:
+  - id: sync_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/15 * * * *"

@@ -1,0 +1,17 @@
+id: sync-project-code
+namespace: dev.testing
+
+tasks:
+  - id: sync_code
+    type: io.kestra.plugin.git.SyncNamespaceFiles
+    gitDirectory: data-processing
+    namespace: dev.testing
+    url: https://github.com/YOUR-USERNAME/kestra-demo.git
+    branch: main
+    username: YOUR-USERNAME
+    password: "{{ secret('GITHUB_TOKEN') }}"
+    
+triggers:
+  - id: sync_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/15 * * * *"  # Sync every 15 minutes
