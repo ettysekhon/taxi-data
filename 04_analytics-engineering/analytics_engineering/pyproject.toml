@@ -1,0 +1,17 @@
+[project]
+name = "analytics-engineering"
+version = "0.1.0"
+description = "Analytics engineering with dbt Core and DuckDB on NYC taxi data"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "dbt-duckdb>=1.9.0",
+    "duckdb>=1.1.0",
+    "requests>=2.31.0",
+]
+
+[dependency-groups]
+dev = [
+    "sqlfluff>=3.0.0",
+    "sqlfluff-templater-dbt>=3.0.0",
+]

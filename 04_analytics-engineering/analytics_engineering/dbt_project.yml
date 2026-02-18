@@ -1,0 +1,30 @@
+name: 'analytics_engineering'
+version: '1.0.0'
+
+require-dbt-version: [">=1.7.0", "<2.0.0"]
+
+profile: 'analytics_engineering'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  dev_start_date: '2019-01-01'
+  dev_end_date: '2019-02-01'
+
+models:
+  analytics_engineering:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table

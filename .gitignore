@@ -15,3 +15,5 @@ workflow-orchestration/kestra-storage/
 .venv/
 *.parquet
 .env_encoded
+
+kestra-gcp-key.json

@@ -1,0 +1,33 @@
+macros:
+  - name: get_trip_duration_minutes
+    description: >
+      Calculates trip duration in minutes from pickup and dropoff timestamps.
+      Cross-database compatible (DuckDB, BigQuery, Snowflake, etc.).
+    arguments:
+      - name: pickup_datetime
+        type: timestamp
+        description: The pickup timestamp
+      - name: dropoff_datetime
+        type: timestamp
+        description: The dropoff timestamp
+
+  - name: get_vendor_data
+    description: >
+      Generates a CASE statement mapping vendor_id to vendor_name.
+      Uses a Jinja dictionary compiled at build time.
+    arguments:
+      - name: vendor_id_column
+        type: integer
+        description: The column name containing the vendor ID
+
+  - name: safe_cast
+    description: >
+      Cross-database CAST that uses SAFE_CAST on BigQuery (returns NULL on failure)
+      and regular CAST on other databases.
+    arguments:
+      - name: column
+        type: string
+        description: The column to cast
+      - name: data_type
+        type: string
+        description: The target data type
