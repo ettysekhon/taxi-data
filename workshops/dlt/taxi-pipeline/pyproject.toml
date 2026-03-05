@@ -1,0 +1,16 @@
+[project]
+name = "taxi-pipeline"
+version = "0.1.0"
+description = "NYC taxi trip data — dlt pipeline + analysis"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dlt[duckdb,workspace]>=1.22.2",
+]
+
+[dependency-groups]
+dev = [
+    "ibis-framework[duckdb]>=12.0.0",
+    "marimo>=0.19.9",
+    "altair>=6.0.0",
+]

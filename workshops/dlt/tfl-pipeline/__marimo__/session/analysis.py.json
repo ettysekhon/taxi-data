@@ -1,0 +1,217 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.20.4",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "vblA",
+      "code_hash": "1a7d65b192116379a885aa11e9381de0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"transport-for-london-data-explorer\">Transport for London \u2014 Data Explorer</h1>\n<span class=\"paragraph\">Data loaded via dlt from the TfL Unified API into DuckDB.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "647cfcdc760964316ddf16e24955ea43",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"bike-points-by-area\">Bike Points by Area</h2>\n<span class=\"paragraph\">There are ~800 Santander Cycles docking stations across London.\nWhich areas have the most?</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "8960bc1e963d025d4eb16c506d9f245b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"docking-station-capacity\">Docking Station Capacity</h2>\n<span class=\"paragraph\">Each bike point has <code>additional_properties</code> \u2014 dlt normalised these into a child table.\nWe can extract <code>NbDocks</code> (total capacity) per station.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "3ccc7d0c7eed02451450addff1e168f3",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"major-roads-current-status\">Major Roads \u2014 Current Status</h2>\n<span class=\"paragraph\">Overview of TfL-managed strategic roads (A2, A4, A40, etc.)</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "d2dea55f6c5a15730206fb53c8b031f0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"accident-statistics-2019\">Accident Statistics (2019)</h2>\n<span class=\"paragraph\">50,626 accident records from TfL, with nested casualties and vehicles tables.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "2374018b1163bd6335a472f35faf909a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"tube-line-status-live-snapshot\">Tube Line Status (Live Snapshot)</h2>\n<span class=\"paragraph\">Status of Victoria, Circle, Central, and Northern lines at time of data load.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "3f265f4fdafd21e0f6f44e99c8a8bf37",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "0e0b5f358d76ee8c47fb7421394ad740",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "6357c399eb52fc876fabf3c2a50d5929",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"available-tables\">Available Tables</h2>\n<ul>\n<li><code>accident_stats</code></li>\n<li><code>accident_stats__casualties</code></li>\n<li><code>accident_stats__vehicles</code></li>\n<li><code>active_service_types</code></li>\n<li><code>air_quality</code></li>\n<li><code>bike_point</code></li>\n<li><code>bike_point__additional_properties</code></li>\n<li><code>journey_modes</code></li>\n<li><code>line_by_mode</code></li>\n<li><code>line_by_mode__service_types</code></li>\n<li><code>line_modes</code></li>\n<li><code>line_route</code></li>\n<li><code>line_route__route_sections</code></li>\n<li><code>line_route__service_types</code></li>\n<li><code>line_severity</code></li>\n<li><code>line_status</code></li>\n<li><code>line_status__line_statuses</code></li>\n<li><code>line_status__line_statuses__validity_periods</code></li>\n<li><code>line_status__service_types</code></li>\n<li><code>road</code></li>\n<li><code>stop_point_modes</code></li>\n<li><code>stop_point_types</code></li>\n</ul></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "f61fa838fef22999c5f0b904002a53b4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "application/vnd.vegalite.v6+json": "{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v6.1.0.json\",\n  \"config\": {\n    \"view\": {\n      \"continuousHeight\": 300,\n      \"continuousWidth\": 300\n    }\n  },\n  \"data\": {\n    \"name\": \"data-7f9e9cd93a1ba32d086bb6dcf06579fa\"\n  },\n  \"datasets\": {\n    \"data-7f9e9cd93a1ba32d086bb6dcf06579fa\": [\n      {\n        \"area\": \"Marylebone\",\n        \"stations\": 75\n      },\n      {\n        \"area\": \"Holborn\",\n        \"stations\": 57\n      },\n      {\n        \"area\": \"Mayfair\",\n        \"stations\": 54\n      },\n      {\n        \"area\": \"Westminster\",\n        \"stations\": 48\n      },\n      {\n        \"area\": \"Kensington\",\n        \"stations\": 45\n      },\n      {\n        \"area\": \"Bloomsbury\",\n        \"stations\": 45\n      },\n      {\n        \"area\": \"Vauxhall\",\n        \"stations\": 45\n      },\n      {\n        \"area\": \"Bethnal Green\",\n        \"stations\": 42\n      },\n      {\n        \"area\": \"Battersea\",\n        \"stations\": 42\n      },\n      {\n        \"area\": \"Camden Town\",\n        \"stations\": 42\n      },\n      {\n        \"area\": \"Hoxton\",\n        \"stations\": 39\n      },\n      {\n        \"area\": \"Bermondsey\",\n        \"stations\": 39\n      },\n      {\n        \"area\": \"South Kensington\",\n        \"stations\": 36\n      },\n      {\n        \"area\": \"Shoreditch\",\n        \"stations\": 36\n      },\n      {\n        \"area\": \"Fulham\",\n        \"stations\": 36\n      }\n    ]\n  },\n  \"encoding\": {\n    \"tooltip\": [\n      {\n        \"field\": \"area\",\n        \"type\": \"nominal\"\n      },\n      {\n        \"field\": \"stations\",\n        \"type\": \"quantitative\"\n      }\n    ],\n    \"x\": {\n      \"field\": \"stations\",\n      \"title\": \"Number of Docking Stations\",\n      \"type\": \"quantitative\"\n    },\n    \"y\": {\n      \"field\": \"area\",\n      \"sort\": \"-x\",\n      \"title\": \"Area\",\n      \"type\": \"nominal\"\n    }\n  },\n  \"height\": 400,\n  \"mark\": {\n    \"color\": \"#e11d48\",\n    \"type\": \"bar\"\n  },\n  \"title\": \"Top 15 Areas by Bike Docking Stations\",\n  \"usermeta\": {\n    \"embedOptions\": {}\n  },\n  \"width\": 600\n}"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "ebd50f36affbcdccddad003903c47981",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "application/vnd.vegalite.v6+json": "{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v6.1.0.json\",\n  \"config\": {\n    \"view\": {\n      \"continuousHeight\": 300,\n      \"continuousWidth\": 300\n    }\n  },\n  \"data\": {\n    \"name\": \"data-0f3f7a82bc0b2ee86fa5697eb96b3437\"\n  },\n  \"datasets\": {\n    \"data-0f3f7a82bc0b2ee86fa5697eb96b3437\": [\n      {\n        \"_dlt_parent_id\": \"dVU9EKuFpW+L9A\",\n        \"capacity\": 63\n      },\n      {\n        \"_dlt_parent_id\": \"oZe5Bc8O8JjXpA\",\n        \"capacity\": 63\n      },\n      {\n        \"_dlt_parent_id\": \"0Waeqdb1t+rqKA\",\n        \"capacity\": 63\n      },\n      {\n        \"_dlt_parent_id\": \"8VfN3DIn6SrVSw\",\n        \"capacity\": 60\n      },\n      {\n        \"_dlt_parent_id\": \"ECpHFO9RUEs1YQ\",\n        \"capacity\": 60\n      },\n      {\n        \"_dlt_parent_id\": \"YUpQhq0r143ppg\",\n        \"capacity\": 60\n      },\n      {\n        \"_dlt_parent_id\": \"mD/RYZk2usd0DA\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"Bc3SzidEnNO42A\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"hv3XzmN9Kq/YsQ\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"MKhX2VYc06t/Pg\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"7rpTBFbT1J6kdA\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"hjdBeXHoEPHQ0Q\",\n        \"capacity\": 57\n      },\n      {\n        \"_dlt_parent_id\": \"AbmRS2tO8LZ2pA\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"kqCxZ6sLZiY2YA\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"eoaWDc/rfYtZ7w\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"h0KT6SWjKNKTng\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"307Gr3GP5n2SQg\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"86hx7nQU6CM6Gg\",\n        \"capacity\": 56\n      },\n      {\n        \"_dlt_parent_id\": \"KR2oBXTVRIWyAA\",\n        \"capacity\": 54\n      },\n      {\n        \"_dlt_parent_id\": \"1jWbAhA1wkMHFg\",\n        \"capacity\": 54\n      }\n    ]\n  },\n  \"encoding\": {\n    \"tooltip\": [\n      {\n        \"field\": \"_dlt_parent_id\",\n        \"type\": \"nominal\"\n      },\n      {\n        \"field\": \"capacity\",\n        \"type\": \"quantitative\"\n      }\n    ],\n    \"x\": {\n      \"field\": \"capacity\",\n      \"title\": \"Total Docks\",\n      \"type\": \"quantitative\"\n    },\n    \"y\": {\n      \"field\": \"_dlt_parent_id\",\n      \"sort\": \"-x\",\n      \"title\": \"Station ID\",\n      \"type\": \"nominal\"\n    }\n  },\n  \"height\": 400,\n  \"mark\": {\n    \"color\": \"#2563eb\",\n    \"type\": \"bar\"\n  },\n  \"title\": \"Top 20 Largest Docking Stations\",\n  \"usermeta\": {\n    \"embedOptions\": {}\n  },\n  \"width\": 600\n}"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "bf9fb803103d88b243eb0e9116fa7d45",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='RGSE-0' random-id='5e1b519c-f1b7-07ae-fb6a-83d8c2b2ce2f'><marimo-table data-initial-value='[]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Road Status&lt;/span&gt;&lt;/span&gt;&quot;' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A1&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A10&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A12&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Serious&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Serious Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A13&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A2&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:5,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A20&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:6,&#92;&quot;display_name&#92;&quot;:&#92;&quot;South Circular (A205)&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:7,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A21&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:8,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A23&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:9,&#92;&quot;display_name&#92;&quot;:&#92;&quot;A24&#92;&quot;,&#92;&quot;status_severity&#92;&quot;:&#92;&quot;Good&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;No Exceptional Delays&#92;&quot;}]&quot;' data-total-rows='72' data-total-columns='3' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;display_name&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;status_severity&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;status_severity_description&quot;,[&quot;string&quot;,&quot;str&quot;]]]' data-selection='&quot;multi&quot;' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false' data-download-file-name='&quot;roads_df&quot;'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "3d4ab702b02b78b3d24ee123d35a1d25",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "application/vnd.vegalite.v6+json": "{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v6.1.0.json\",\n  \"config\": {\n    \"view\": {\n      \"continuousHeight\": 300,\n      \"continuousWidth\": 300\n    }\n  },\n  \"data\": {\n    \"name\": \"data-84ab1d90976cc45931edf929978a2696\"\n  },\n  \"datasets\": {\n    \"data-84ab1d90976cc45931edf929978a2696\": [\n      {\n        \"count\": 720,\n        \"severity\": \"Fatal\"\n      },\n      {\n        \"count\": 21978,\n        \"severity\": \"Serious\"\n      },\n      {\n        \"count\": 129180,\n        \"severity\": \"Slight\"\n      }\n    ]\n  },\n  \"encoding\": {\n    \"color\": {\n      \"field\": \"severity\",\n      \"scale\": {\n        \"domain\": [\n          \"Fatal\",\n          \"Serious\",\n          \"Slight\"\n        ],\n        \"range\": [\n          \"#dc2626\",\n          \"#f97316\",\n          \"#facc15\"\n        ]\n      },\n      \"title\": \"Severity\",\n      \"type\": \"nominal\"\n    },\n    \"theta\": {\n      \"field\": \"count\",\n      \"type\": \"quantitative\"\n    },\n    \"tooltip\": [\n      {\n        \"field\": \"severity\",\n        \"type\": \"nominal\"\n      },\n      {\n        \"field\": \"count\",\n        \"type\": \"quantitative\"\n      }\n    ]\n  },\n  \"height\": 400,\n  \"mark\": {\n    \"innerRadius\": 50,\n    \"type\": \"arc\"\n  },\n  \"title\": \"Accidents by Severity (2019)\",\n  \"usermeta\": {\n    \"embedOptions\": {}\n  },\n  \"width\": 400\n}"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "2f721d2141bb41fe727833228b80b864",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "application/vnd.vegalite.v6+json": "{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v6.1.0.json\",\n  \"config\": {\n    \"view\": {\n      \"continuousHeight\": 300,\n      \"continuousWidth\": 300\n    }\n  },\n  \"data\": {\n    \"name\": \"data-30e4ab552021b8e217697abcaeff4fd8\"\n  },\n  \"datasets\": {\n    \"data-30e4ab552021b8e217697abcaeff4fd8\": [\n      {\n        \"mode\": \"Car\",\n        \"total\": 68742\n      },\n      {\n        \"mode\": \"Pedestrian\",\n        \"total\": 33972\n      },\n      {\n        \"mode\": \"PoweredTwoWheeler\",\n        \"total\": 32346\n      },\n      {\n        \"mode\": \"PedalCycle\",\n        \"total\": 27804\n      },\n      {\n        \"mode\": \"BusOrCoach\",\n        \"total\": 7044\n      },\n      {\n        \"mode\": \"GoodsVehicle\",\n        \"total\": 3564\n      },\n      {\n        \"mode\": \"Taxi\",\n        \"total\": 3126\n      },\n      {\n        \"mode\": \"PrivateHire\",\n        \"total\": 2550\n      },\n      {\n        \"mode\": \"OtherVehicle\",\n        \"total\": 894\n      }\n    ]\n  },\n  \"encoding\": {\n    \"tooltip\": [\n      {\n        \"field\": \"mode\",\n        \"type\": \"nominal\"\n      },\n      {\n        \"field\": \"total\",\n        \"type\": \"quantitative\"\n      }\n    ],\n    \"x\": {\n      \"field\": \"total\",\n      \"title\": \"Casualties\",\n      \"type\": \"quantitative\"\n    },\n    \"y\": {\n      \"field\": \"mode\",\n      \"sort\": \"-x\",\n      \"title\": \"Transport Mode\",\n      \"type\": \"nominal\"\n    }\n  },\n  \"height\": 350,\n  \"mark\": {\n    \"color\": \"#7c3aed\",\n    \"type\": \"bar\"\n  },\n  \"title\": \"Top 10 Casualty Modes (2019)\",\n  \"usermeta\": {\n    \"embedOptions\": {}\n  },\n  \"width\": 600\n}"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "2e884e15b08fc245476a00b74b6ec8c6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='iLit-0' random-id='738a753b-e4b0-d557-b388-ff730d0d5f01'><marimo-table data-initial-value='[]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Line Status&lt;/span&gt;&lt;/span&gt;&quot;' data-data='&quot;[{&#92;&quot;_marimo_row_id&#92;&quot;:0,&#92;&quot;name&#92;&quot;:&#92;&quot;Central&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:1,&#92;&quot;name&#92;&quot;:&#92;&quot;Circle&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:2,&#92;&quot;name&#92;&quot;:&#92;&quot;Northern&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:3,&#92;&quot;name&#92;&quot;:&#92;&quot;Victoria&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:4,&#92;&quot;name&#92;&quot;:&#92;&quot;Central&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:5,&#92;&quot;name&#92;&quot;:&#92;&quot;Circle&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:6,&#92;&quot;name&#92;&quot;:&#92;&quot;Northern&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:7,&#92;&quot;name&#92;&quot;:&#92;&quot;Victoria&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:8,&#92;&quot;name&#92;&quot;:&#92;&quot;Central&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Minor Delays&#92;&quot;},{&#92;&quot;_marimo_row_id&#92;&quot;:9,&#92;&quot;name&#92;&quot;:&#92;&quot;Circle&#92;&quot;,&#92;&quot;mode_name&#92;&quot;:&#92;&quot;tube&#92;&quot;,&#92;&quot;status_severity_description&#92;&quot;:&#92;&quot;Good Service&#92;&quot;}]&quot;' data-total-rows='13' data-total-columns='3' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='true' data-page-size='10' data-field-types='[[&quot;name&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;mode_name&quot;,[&quot;string&quot;,&quot;str&quot;]],[&quot;status_severity_description&quot;,[&quot;string&quot;,&quot;str&quot;]]]' data-selection='&quot;multi&quot;' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[]' data-has-stable-row-id='true' data-lazy='false' data-preload='false' data-download-file-name='&quot;status_df&quot;'></marimo-table></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "626f6f5e0b4bd11ccb85a27db8112153",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"summary\">Summary</h2>\n<table>\n<thead>\n<tr>\n<th>Metric</th>\n<th>Value</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>Bike Docking Stations</strong></td>\n<td>2,396</td>\n</tr>\n<tr>\n<td><strong>Accidents (2019)</strong></td>\n<td>151,878</td>\n</tr>\n<tr>\n<td><strong>Casualties (2019)</strong></td>\n<td>180,042</td>\n</tr>\n<tr>\n<td><strong>Strategic Roads</strong></td>\n<td>72</td>\n</tr>\n<tr>\n<td><strong>Line Routes</strong></td>\n<td>2,181</td>\n</tr>\n</tbody>\n</table></span>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}

@@ -19,7 +19,10 @@ workflow-orchestration/kestra-storage/
 kestra-gcp-key.json
 .bruin.yml
 logs/runs
-logs/*.log
+logs/queries
+logs/**/*.log
+logs/**/*.json
 __pycache__/
 *.py[cod]
 logs/queries05-data-platforms/bruin-taxi-pipeline/pipeline/nyc_taxi.duckdb
+*.duckdb
