@@ -1,0 +1,21 @@
+# Data files (CSV/parquet already in root .gitignore)
+*.csv.gz
+*.crc
+_SUCCESS
+
+# Spark output directories
+code/data/
+code/zones/
+code/fhvhv/
+
+# Downloaded source data
+code/*.parquet
+code/*.csv
+code/*.csv.gz
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+.venv/
